@@ -11,9 +11,17 @@ class Produtos(Base):
     EMBALAGEM = Column(String(100))
     UNIDADE = Column(String(3))
     CODSEC = Column(Integer)
+    CODEPTO = Column(Integer)
     
 class Categorias(Base):
     __tablename__ = 'PCSECAO'
     
     CODSEC = Column(Integer, primary_key=True)
     DESCRICAO = Column(String(150))
+    CODEPTO = Column(Integer)
+    
+class Departamentos(Base):
+    __tablename__ = 'PCDEPTO'
+    
+    CODEPTO = Column(Integer)
+    DESCRICAO = Column(String(50))
