@@ -1,0 +1,118 @@
+# =========================
+
+# 🔐 SEGURANÇA
+
+# =========================
+
+.env
+*.env
+*.key
+*.pem
+secrets.json
+
+# =========================
+
+# 🐍 PYTHON / FASTAPI
+
+# =========================
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# Ambiente virtual
+
+venv/
+.env/
+.venv/
+
+# Cache / testes
+
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Logs
+
+*.log
+
+# Banco de dados local
+
+*.sqlite3
+*.db
+
+# Arquivos do sistema
+
+.DS_Store
+Thumbs.db
+
+# =========================
+
+# ⚛️ REACT / NODE
+
+# =========================
+
+node_modules/
+
+# Build
+
+dist/
+build/
+
+# Logs
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache
+
+.cache/
+.next/
+.vite/
+
+# =========================
+
+# 🧠 IDE / EDITOR
+
+# =========================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+
+# 🐳 DOCKER (se usar)
+
+# =========================
+
+docker-compose.override.yml
+
+# =========================
+
+# 📦 OUTROS
+
+# =========================
+
+*.zip
+*.tar
+*.gz
+
+# =========================
+
+# 🔥 OPCIONAL (separação)
+
+# =========================
+
+# Se seu projeto tiver estrutura tipo:
+
+# /frontend (React)
+
+# /backend (FastAPI)
+
+# pode ignorar builds específicos:
