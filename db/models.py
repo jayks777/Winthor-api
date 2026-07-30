@@ -23,5 +23,5 @@ class Categorias(Base):
 class Departamentos(Base):
     __tablename__ = 'PCDEPTO'
     
-    CODEPTO = Column(Integer)
+    CODEPTO = Column(Integer, primary_key=True)
     DESCRICAO = Column(String(50))

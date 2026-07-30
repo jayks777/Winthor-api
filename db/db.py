@@ -1,11 +1,21 @@
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import URL
 import os
 
 load_dotenv()
 
-DATABASE_URL = f"mysql+pymysql://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASSWORD')}@{os.getenv('DATABASE_URL')}/{os.getenv('DATABASE_NAME')}"
+DATABASE_URL = URL.create(
+    drivername="oracle+oracledb",
+    username=os.getenv("DATABASE_USER"),
+    password=os.getenv("DATABASE_PASSWORD"),
+    host=os.getenv("DATABASE_HOST"),
+    port=int(os.getenv("DATABASE_PORT")),
+    query={
+        "service_name": os.getenv("DATABASE_SERVICE")
+    }
+)
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autoflush=False, autocommit=False ,bind=engine)
