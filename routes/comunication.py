@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request
 from fastapi_mail import FastMail, MessageSchema, MessageType
-from ..db.schemas import ContactForm
-from ..config import configure_mail_channel
-from ..utils.limiter import limiter
+from db.schemas import ContactForm
+from config import configure_mail_channel
+from utils.limiter import limiter
 
 router = APIRouter(tags=['Comunicação'], prefix='/channel')
 

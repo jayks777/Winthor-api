@@ -1,6 +1,6 @@
 from pathlib import Path
 from fastapi import FastAPI
-from .config import configure_all
+from config import configure_all
 
 BASE_DIR = Path(__file__).resolve().parent
 

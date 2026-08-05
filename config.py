@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
-from .utils.limiter import limiter
+from utils.limiter import limiter
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -17,10 +17,10 @@ def configure_all(app):
     configure_limiter(app)
 
 def configure_routes(app):
-    from .routes.user import router as user_router
-    from .routes.departments import router as departments_router
-    from .routes.produtos import router as product_router
-    from .routes.comunication import router as channel_router
+    from routes.user import router as user_router
+    from routes.departments import router as departments_router
+    from routes.produtos import router as product_router
+    from routes.comunication import router as channel_router
     
     app.include_router(user_router)
     app.include_router(departments_router)

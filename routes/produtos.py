@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
-from ..db.db import get_db
-from ..db.models import Produtos, Categorias, Departamentos, Estoque
+from db.db import get_db
+from db.models import Produtos, Categorias, Departamentos, Estoque
 from dotenv import load_dotenv
 import os
 
