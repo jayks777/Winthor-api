@@ -25,3 +25,12 @@ class Departamentos(Base):
     
     CODEPTO = Column(Integer, primary_key=True)
     DESCRICAO = Column(String(50))
+    
+class Estoque(Base):
+    __tablename__ = 'PCEST'
+    
+    CODPROD = Column(Integer, primary_key=True, unique=False)
+    CODFILIAL = Column(Integer)
+    QTEST = Column(Integer)
+    
+#PCUSUARI

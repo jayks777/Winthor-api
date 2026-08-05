@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
-from db.db import get_db
-from db.models import Departamentos, Categorias
+from ..db.db import get_db
+from ..db.models import Departamentos, Categorias
 
 router = APIRouter(tags=["Departamentos"], prefix="/departments")
 

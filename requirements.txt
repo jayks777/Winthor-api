@@ -1,8 +1,9 @@
 fastapi
 uvicorn
-httpx
-dotenv
+python-dotenv
 sqlalchemy
-pymysql
 pydantic
+email-validator
 oracledb
+fastapi-mail
+slowapi

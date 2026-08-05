@@ -17,6 +17,8 @@ DATABASE_URL = URL.create(
     }
 )
 
+print(DATABASE_URL)
+
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autoflush=False, autocommit=False ,bind=engine)
 
