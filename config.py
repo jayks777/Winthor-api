@@ -54,7 +54,7 @@ def configure_mail_channel():
     MAIL_FROM=os.getenv('MAIL_FROM'),
     MAIL_PORT=int(os.getenv('MAIL_PORT')),
     MAIL_SERVER=os.getenv('MAIL_SERVER'),
-    MAIL_STARTTLS=True,
+    MAIL_STARTTLS=False,
     MAIL_SSL_TLS=False,
 
     USE_CREDENTIALS=True,
