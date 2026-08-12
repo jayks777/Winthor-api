@@ -7,3 +7,6 @@ email-validator
 oracledb
 fastapi-mail
 slowapi
+pymysql
+jose
+passlib[bcrypt]

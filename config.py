@@ -21,11 +21,13 @@ def configure_routes(app):
     from routes.departments import router as departments_router
     from routes.produtos import router as product_router
     from routes.comunication import router as channel_router
+    from routes.auth import router as auth_router
     
     app.include_router(user_router)
     app.include_router(departments_router)
     app.include_router(product_router)
     app.include_router(channel_router)
+    app.include_router(auth_router)
 
 def configure_cors(app):
     raw_origins = os.getenv("CORS_ALLOWED_ORIGINS", "*")

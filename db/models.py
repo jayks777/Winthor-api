@@ -33,5 +33,10 @@ class Estoque(Base):
     CODFILIAL = Column(Integer)
     QTEST = Column(Integer)
     
-#PCUSUARI
-#PCCLIENT
+class Clientes(Base):
+    __tablename__ = 'PCCLIENT'
+    
+    CODCLI = Column(Integer, primary_key=True)
+    CLIENTE = Column(String(150))
+    MUNICCOB = Column(String(100))
+    
