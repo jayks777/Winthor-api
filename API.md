@@ -1,1 +1,1 @@
-## teste de markdowns
+## API desenvolvida com a finalidade de atender o sistema de e-commerce da Rio Grandense, baseado no banco de dados do ERP WinThor da TOTVS.

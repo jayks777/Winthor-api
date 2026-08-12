@@ -34,3 +34,4 @@ class Estoque(Base):
     QTEST = Column(Integer)
     
 #PCUSUARI
+#PCCLIENT
