@@ -19,3 +19,39 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+from datetime import date
+from decimal import Decimal
+
+class ClienteResponse(BaseModel):
+    CODCLI: int
+    CLIENTE: str | None = None
+    CGCENT: str | None = None
+    ENDERENT: str | None = None
+    MUNICENT: str | None = None
+    TELENT: str | None = None
+    LIMCRED: Decimal | float | None = None
+    IEENT: str | None = None
+    OBS: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class PrestacaoResponse(BaseModel):
+    DUPLIC: int
+    CODCLI: int | None = None
+    VALOR: Decimal | float | None = None
+    DTVENC: date | None = None
+    DTEMISSAO: date | None = None
+    DTBAIXA: date | None = None
+    CODCOB: str | None = None
+    CODFILIAL: int | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class ClienteComPrestacoes(ClienteResponse):
+    prestacoes: list[PrestacaoResponse] = []

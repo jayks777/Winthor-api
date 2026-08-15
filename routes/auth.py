@@ -46,15 +46,27 @@ def check_login_rate_limit(request: Request, usuario: str):
 
 
 @router.post("/login")
-def login(
-    data: UserLogin,
+async def login(
     request: Request,
     response: Response,
     db: Session = Depends(get_db),
 ):
-    rate_limit_key = check_login_rate_limit(request, data.usuario)
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        body = await request.json()
+        usuario = body.get("usuario") or body.get("username")
+        senha = body.get("senha") or body.get("password")
+    else:
+        form = await request.form()
+        usuario = form.get("username") or form.get("usuario")
+        senha = form.get("password") or form.get("senha")
 
-    user = AuthService.authenticate_user(db, data.usuario, data.senha)
+    if not usuario or not senha:
+        raise HTTPException(status_code=422, detail="Usuário e senha são obrigatórios.")
+
+    rate_limit_key = check_login_rate_limit(request, str(usuario))
+
+    user = AuthService.authenticate_user(db, str(usuario), str(senha))
     if not user:
         raise HTTPException(status_code=401, detail="Credenciais invalidas")
 
@@ -71,7 +83,11 @@ def login(
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
-    return {"message": "Logged in"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "message": "Logged in",
+    }
 
 
 @router.post("/logout")

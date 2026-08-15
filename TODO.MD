@@ -1,9 +1,2 @@
-# [x]1. Integrar com o banco real WinThor
+Fazer o relacionamento entre prestacoes e clientes para trazer o nome do cliente junto com as prestações
 
-# [X]2. Subir para o servidor interno
-
-# [X]3. Disponibilizar no domínio api.distribuidorariograndense.com.br
-
-# []4. Implementar JWT
-
-# []5. Conectar no banco da UOL

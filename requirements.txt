@@ -8,5 +8,6 @@ oracledb
 fastapi-mail
 slowapi
 pymysql
+python-multipart
 jose
 passlib[bcrypt]

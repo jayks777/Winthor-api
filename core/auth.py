@@ -8,7 +8,7 @@ from db.uol_database import UolUser, get_db
 
 ACCESS_TOKEN_COOKIE_NAME = "access_token"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 
 def get_current_user(
