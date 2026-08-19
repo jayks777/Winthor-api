@@ -9,5 +9,6 @@ fastapi-mail
 slowapi
 pymysql
 python-multipart
-jose
-passlib[bcrypt]
+python-jose
+passlib==1.7.4
+bcrypt==4.3.0

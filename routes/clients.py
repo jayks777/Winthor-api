@@ -38,6 +38,8 @@ def get_client(
 @router.get("/{codcli}/prestacoes", response_model=ClienteComPrestacoes)
 def get_client_prestacoes(
     codcli: int,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     current_user: UolUser = Depends(get_current_user),
 ):
@@ -46,7 +48,7 @@ def get_client_prestacoes(
     if not client:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
 
-    prestacoes = ClientRepository.find_prestacoes(db, codcli)
+    prestacoes = ClientRepository.find_prestacoes(db, codcli, limit=limit, offset=offset)
     return {
         "CODCLI": client.CODCLI,
         "CLIENTE": client.CLIENTE,

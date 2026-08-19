@@ -61,11 +61,8 @@ async def catalog(
             query = query.filter(Produtos.DESCRICAO.ilike(f"%{termo}%"))
 
     total = query.count()
-    mostrar_tudo = codepto is not None and codsec is not None
 
-    if mostrar_tudo:
-        produtos = query.order_by(Produtos.DESCRICAO).all()
-    elif busca or codepto or codsec:
+    if busca or codepto or codsec:
         produtos = (
             query.order_by(Produtos.DESCRICAO)
             .offset((page - 1) * page_size)

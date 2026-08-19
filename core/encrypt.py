@@ -19,7 +19,8 @@ def get_required_env(name: str, default: str | None = None) -> str:
 
 SECRET_KEY = get_required_env("SECRET_KEY", "123456789")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+# Sete dias é o prazo padrão da sessão; a variável permite reduzi-lo por ambiente.
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(7 * 24 * 60)))
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],

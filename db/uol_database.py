@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, UniqueConstraint
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.engine import URL
 import os
@@ -17,7 +17,12 @@ DATABASE_URL = URL.create(
 )
 
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=20,
+    max_overflow=40
+)
 
 SessionLocal = sessionmaker(
     autoflush=False,
@@ -44,7 +49,8 @@ class UolUser(base):
 
 class UolObservacoes(base):
     __tablename__ = "prestacoes"
+    __table_args__ = (UniqueConstraint("duplic", name="uq_prestacoes_duplic"),)
 
     id = Column(Integer, primary_key=True)
-    duplic = Column(Integer)
-    observacao = Column(String(200))
+    duplic = Column(Integer, nullable=False)
+    obs = Column(String(200))

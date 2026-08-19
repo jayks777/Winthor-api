@@ -17,7 +17,13 @@ DATABASE_URL = URL.create(
     }
 )
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=20,
+    max_overflow=40
+)
+
 SessionLocal = sessionmaker(autoflush=False, autocommit=False ,bind=engine)
 
 def get_db():

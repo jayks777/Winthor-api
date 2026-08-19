@@ -20,18 +20,17 @@ class ClientRepository:
         return db.query(Clientes).filter(Clientes.CODCLI == codcli).first()
 
     @staticmethod
-    def find_prestacoes(db: Session, codcli: int):
-        return db.query(Prestacoes).filter(Prestacoes.CODCLI == codcli).order_by(Prestacoes.DTVENC.desc()).all()
-
-
-# class Clientes(Base):
-#     __tablename__ = 'PCCLIENT'
-
-#     CODCLI = Column(Integer, primary_key=True)
-#     CLIENTE = Column(String(150))
-#     RG = Column(String(20))   # CNPJ/CPF
-#     ENDERENT = Column(String(100))  # Endereço de entrega
-#     MUNICENT = Column(String(100))  # Município de entrega
-#     TELENT = Column(String(30))   # Telefone de entrega
-#     LIMCRED = Column(Numeric(15, 2))  # Limite de crédito
-#     OBS = Column(String(255))   
+    def find_prestacoes(
+        db: Session,
+        codcli: int,
+        limit: int = 50,
+        offset: int = 0,
+    ):
+        return (
+            db.query(Prestacoes)
+            .filter(Prestacoes.CODCLI == codcli)
+            .order_by(Prestacoes.DTVENC.desc(), Prestacoes.DUPLIC)
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )

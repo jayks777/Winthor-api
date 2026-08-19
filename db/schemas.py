@@ -42,15 +42,22 @@ class ClienteResponse(BaseModel):
 class PrestacaoResponse(BaseModel):
     DUPLIC: int
     CODCLI: int | None = None
+    CLIENTE: str | None = None
     VALOR: Decimal | float | None = None
     DTVENC: date | None = None
     DTEMISSAO: date | None = None
     DTBAIXA: date | None = None
     CODCOB: str | None = None
     CODFILIAL: int | None = None
+    CODUSUR: int | None = None #Código do vendedor
+    OBS: str | None = None #Observação
 
     class Config:
         from_attributes = True
+
+
+class PrestacaoObservacaoUpdate(BaseModel):
+    observacao: str = Field(min_length=1, max_length=200)
 
 
 class ClienteComPrestacoes(ClienteResponse):
