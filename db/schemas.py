@@ -68,3 +68,10 @@ class PrestacaoPorDiaResponse(BaseModel):
 
 class ClienteComPrestacoes(ClienteResponse):
     prestacoes: list[PrestacaoResponse] = []
+
+class UsuarioResponse(BaseModel):
+    CODUSUR: int
+    NOME: str | None = None
+
+    class Config:
+        from_attributes = True

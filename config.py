@@ -26,6 +26,7 @@ def configure_routes(app):
     from routes.auth import router as auth_router
     from routes.clients import router as clients_router
     from routes.prestacoes import router as prestacoes_router
+    from routes.usuarios import router as usuarios_router
     
     app.include_router(user_router)
     app.include_router(departments_router)
@@ -34,6 +35,7 @@ def configure_routes(app):
     app.include_router(auth_router)
     app.include_router(clients_router)
     app.include_router(prestacoes_router)
+    app.include_router(usuarios_router)
 
 def configure_cors(app):
     raw_origins = os.getenv("CORS_ALLOWED_ORIGINS", "*")

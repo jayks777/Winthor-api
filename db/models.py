@@ -61,3 +61,9 @@ class Prestacoes(Base):
     CODCOB = Column(String(10))   # Tipo de cobrança
     CODFILIAL = Column(Integer)
     CODUSUR = Column(Integer) #Código do vendedor
+
+class Vendedores(Base):
+    __tablename__ = 'PCUSUARI'
+
+    CODUSUR = Column(Integer, primary_key=True)
+    NOME = Column(String(150))

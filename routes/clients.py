@@ -52,12 +52,12 @@ def get_client_prestacoes(
     return {
         "CODCLI": client.CODCLI,
         "CLIENTE": client.CLIENTE,
-        "CGCCLI": client.CGCCLI,
-        "ENDCLI": client.ENDCLI,
-        "MUNICCOB": client.MUNICCOB,
-        "TELEFONE": client.TELEFONE,
+        "CGCENT": client.CGCENT,
+        "ENDERENT": client.ENDERENT,
+        "MUNICENT": client.MUNICENT,
+        "TELENT": client.TELENT,
         "LIMCRED": client.LIMCRED,
-        "BLOQUEIO": client.BLOQUEIO,
+        "IEENT": client.IEENT,
         "prestacoes": prestacoes,
     }
 

@@ -62,6 +62,7 @@ class PrestacaoRepository:
         codfilial: int | None = None,
         dias_passados: int = 30,
         dias_futuros: int = 30,
+        codusur: int | None = None,
         limit: int = 50,
         offset: int = 0,
         search: str | None = None,
@@ -75,6 +76,8 @@ class PrestacaoRepository:
             query = query.filter(Prestacoes.CODCLI == codcli)
         if codfilial is not None:
             query = query.filter(Prestacoes.CODFILIAL == codfilial)
+        if codusur is not None:
+            query = query.filter(Prestacoes.CODUSUR == codusur)
         if search:
             term = f"%{search}%"
             query = query.filter(

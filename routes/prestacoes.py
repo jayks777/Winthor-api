@@ -24,6 +24,7 @@ def list_prestacoes(
     dias_passados: int = Query(default=30, ge=0, le=365, description="Dias anteriores ao vencimento a considerar"),
     dias_futuros: int = Query(default=30, ge=0, le=365, description="Dias futuros ao vencimento a considerar"),
     search: str | None = Query(default=None, description="Busca por nome do cliente ou número da duplicata (parcial, case-insensitive)"),
+    codusur: int | None = Query(default=None, description="Filtrar por código do vendedor"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -32,7 +33,7 @@ def list_prestacoes(
 ):
     """Retorna prestações paginadas no intervalo de vencimento solicitado."""
     prestacoes = PrestacaoRepository.find_all(
-        db, codcli, codfilial, dias_passados, dias_futuros, limit, offset, search
+        db, codcli, codfilial, dias_passados, dias_futuros, codusur, limit, offset, search
     )
     return _with_observacoes(prestacoes, uol_db)
 
