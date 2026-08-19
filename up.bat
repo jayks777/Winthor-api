@@ -1,15 +1,19 @@
 @echo off
-:: Altere para o caminho da pasta onde está o seu projeto Git
+
 cd /d "C:\App\API"
 
 echo Atualizando o codigo com Git...
 git pull
 
+echo Atualizando dependencias...
+C:\App\API\venv\Scripts\python.exe -m pip install --upgrade pip
+C:\App\API\venv\Scripts\python.exe -m pip install -r requirements.txt
+
 echo.
 echo Reiniciando o servico do FastAPI...
-:: Substitua "NomeDoSeuServico" pelo nome exato do servico no Windows
-net stop "FastAPI"
-net start "FastAPI"
+
+powershell -Command "Stop-Service -Name 'FastAPI'"
+powershell -Command "Start-Service -Name 'FastAPI'"
 
 echo.
 echo Processo concluido com sucesso!
