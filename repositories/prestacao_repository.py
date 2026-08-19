@@ -1,5 +1,7 @@
 from datetime import date, timedelta
+from decimal import Decimal
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from db.models import Clientes, Prestacoes
@@ -62,6 +64,7 @@ class PrestacaoRepository:
         dias_futuros: int = 30,
         limit: int = 50,
         offset: int = 0,
+        search: str | None = None,
     ):
         today = date.today()
         query = PrestacaoRepository._base_query(db).filter(
@@ -72,7 +75,65 @@ class PrestacaoRepository:
             query = query.filter(Prestacoes.CODCLI == codcli)
         if codfilial is not None:
             query = query.filter(Prestacoes.CODFILIAL == codfilial)
+        if search:
+            term = f"%{search}%"
+            query = query.filter(
+                func.upper(Clientes.CLIENTE).like(func.upper(term))
+                | func.to_char(Prestacoes.DUPLIC).like(term)
+            )
         return query.order_by(Prestacoes.DTVENC.desc(), Prestacoes.DUPLIC).offset(offset).limit(limit).all()
+
+    @staticmethod
+    def find_a_vencer_por_dia(
+        db: Session,
+        dias: int = 30,
+        codfilial: int | None = None,
+    ) -> list[dict]:
+        """Retorna total e quantidade de prestações a vencer agrupados por DTVENC.
+
+        Preenche dias sem vencimentos com total=0 e quantidade=0.
+        """
+        today = date.today()
+        end = today + timedelta(days=dias)
+
+        query = (
+            db.query(
+                Prestacoes.DTVENC,
+                func.sum(Prestacoes.VALOR).label("total"),
+                func.count(Prestacoes.DUPLIC).label("quantidade"),
+            )
+            .filter(
+                Prestacoes.DTBAIXA.is_(None),
+                Prestacoes.DTVENC >= today,
+                Prestacoes.DTVENC <= end,
+            )
+        )
+        if codfilial is not None:
+            query = query.filter(Prestacoes.CODFILIAL == codfilial)
+
+        rows = query.group_by(Prestacoes.DTVENC).order_by(Prestacoes.DTVENC.asc()).all()
+
+        # Indexar resultados por data
+        by_date: dict[date, dict] = {
+            row.DTVENC: {
+                "DTVENC": row.DTVENC,
+                "total": float(row.total) if row.total is not None else 0.0,
+                "quantidade": row.quantidade,
+            }
+            for row in rows
+        }
+
+        # Gerar lista completa com zeros nos dias sem vencimento
+        result = []
+        for i in range(dias + 1):
+            day = today + timedelta(days=i)
+            result.append(
+                by_date.get(
+                    day,
+                    {"DTVENC": day, "total": 0.0, "quantidade": 0},
+                )
+            )
+        return result
 
     @staticmethod
     def find_vencidas(

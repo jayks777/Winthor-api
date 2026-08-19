@@ -2,7 +2,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_mail import ConnectionConfig
 from dotenv import load_dotenv
 import os
+# pyrefly: ignore [missing-import]
 from slowapi.errors import RateLimitExceeded
+# pyrefly: ignore [missing-import]
 from slowapi import _rate_limit_exceeded_handler
 from utils.limiter import limiter
 from pathlib import Path
@@ -49,7 +51,7 @@ def configure_cors(app):
         CORSMiddleware,
         allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_methods=["GET", "POST", "OPTIONS", "PATCH", "PUT", "DELETE"],
         allow_headers=["Content-Type"],
     )
     

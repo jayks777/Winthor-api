@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from core.auth import get_current_user
 from db.db import get_db
-from db.schemas import ClienteComPrestacoes, ClienteResponse, PrestacaoResponse
+from db.schemas import ClienteComPrestacoes, ClienteResponse
 from db.uol_database import UolUser
 from repositories.client_repository import ClientRepository
 

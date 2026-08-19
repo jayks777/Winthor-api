@@ -60,5 +60,11 @@ class PrestacaoObservacaoUpdate(BaseModel):
     observacao: str = Field(min_length=1, max_length=200)
 
 
+class PrestacaoPorDiaResponse(BaseModel):
+    DTVENC: date
+    total: float
+    quantidade: int
+
+
 class ClienteComPrestacoes(ClienteResponse):
     prestacoes: list[PrestacaoResponse] = []
