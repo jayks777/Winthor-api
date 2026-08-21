@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from db.models import Clientes, Prestacoes
 from db.uol_database import UolObservacoes
+from core.settings import apply_max_results
 
 
 class PrestacaoRepository:
@@ -64,8 +65,6 @@ class PrestacaoRepository:
         codusur: int | None = None,
         venc: str | None = None,
         emissao: str | None = None,
-        limit: int = 50,
-        offset: int = 0,
         search: str | None = None,
     ):
         today = date.today()
@@ -80,16 +79,23 @@ class PrestacaoRepository:
         if codusur is not None:
             query = query.filter(Prestacoes.CODUSUR == codusur)
         if search:
-            term = f"%{search}%"
-            query = query.filter(
-                func.upper(Clientes.CLIENTE).like(func.upper(term))
-                | func.to_char(Prestacoes.DUPLIC).like(term)
-            )
+            term = search.strip()
+            pattern = f"%{term}%"
+            # Nº da duplicata: igualdade exata para usar o índice da PK (DUPLIC).
+            # Nome do cliente: busca parcial e case-insensitive.
+            if term.isdigit():
+                query = query.filter(
+                    (Prestacoes.DUPLIC == int(term))
+                    | (func.upper(Clientes.CLIENTE).like(func.upper(pattern)))
+                )
+            else:
+                query = query.filter(func.upper(Clientes.CLIENTE).like(func.upper(pattern)))
         if venc:
             query = query.filter(Prestacoes.DTVENC == venc)
         if emissao:
             query = query.filter(Prestacoes.DTEMISSAO == emissao)
-        return query.order_by(Prestacoes.DTVENC.desc(), Prestacoes.DUPLIC).offset(offset).limit(limit).all()
+        query = query.order_by(Prestacoes.DTVENC.desc(), Prestacoes.DUPLIC)
+        return apply_max_results(query).all()
 
     @staticmethod
     def find_a_vencer_por_dia(
@@ -148,8 +154,6 @@ class PrestacaoRepository:
         db: Session,
         dias: int = 30,
         codcli: int | None = None,
-        limit: int = 50,
-        offset: int = 0,
     ):
         today = date.today()
         query = PrestacaoRepository._base_query(db).filter(
@@ -159,15 +163,14 @@ class PrestacaoRepository:
         )
         if codcli is not None:
             query = query.filter(Prestacoes.CODCLI == codcli)
-        return query.order_by(Prestacoes.DTVENC.asc(), Prestacoes.DUPLIC).offset(offset).limit(limit).all()
+        query = query.order_by(Prestacoes.DTVENC.asc(), Prestacoes.DUPLIC)
+        return apply_max_results(query).all()
 
     @staticmethod
     def find_a_vencer(
         db: Session,
         dias: int = 30,
         codcli: int | None = None,
-        limit: int = 50,
-        offset: int = 0,
     ):
         today = date.today()
         query = PrestacaoRepository._base_query(db).filter(
@@ -177,7 +180,8 @@ class PrestacaoRepository:
         )
         if codcli is not None:
             query = query.filter(Prestacoes.CODCLI == codcli)
-        return query.order_by(Prestacoes.DTVENC.asc(), Prestacoes.DUPLIC).offset(offset).limit(limit).all()
+        query = query.order_by(Prestacoes.DTVENC.asc(), Prestacoes.DUPLIC)
+        return apply_max_results(query).all()
 
     @staticmethod
     def find_by_duplic(db: Session, duplic: int):

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import and_
 from db.db import get_db
 from db.models import Produtos, Categorias, Departamentos, Estoque
 from dotenv import load_dotenv
 import os
+import random
 
 load_dotenv()
 
@@ -35,10 +36,14 @@ async def random_product(
         .filter(Estoque.QTEST > 0, Produtos.CODSEC != 110)
     )
 
-    p = query.order_by(func.dbms_random.value()).first()
-
-    if p is None:
+    total = query.count()
+    if total == 0:
         raise HTTPException(status_code=404, detail="Nenhum produto com estoque disponível")
+
+    # Amostragem aleatória barata: evita o ORDER BY dbms_random.value(),
+    # que força o Oracle a ordenar o catálogo inteiro em cada chamada.
+    offset = random.randrange(total)
+    p = query.order_by(Produtos.CODPROD).offset(offset).limit(1).first()
 
     return {
         "CODPROD": p.CODPROD,

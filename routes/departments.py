@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from core.settings import apply_max_results
 from db.db import get_db
 from db.models import Categorias, Departamentos
 
@@ -9,37 +10,29 @@ router = APIRouter(tags=["Departamentos"], prefix="/departments")
 
 @router.get("/")
 async def departments(
-    limit: int = Query(default=50, ge=1, le=200),
-    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
-    """Retorna departamentos paginados, excluindo os registros especiais."""
-    return (
+    """Retorna todos os departamentos, excluindo os registros especiais."""
+    query = (
         db.query(Departamentos)
         .filter(
             ~Departamentos.DESCRICAO.contains("MIGRACAO"),
             ~Departamentos.DESCRICAO.contains("TODOS"),
         )
         .order_by(Departamentos.CODEPTO)
-        .offset(offset)
-        .limit(limit)
-        .all()
     )
+    return apply_max_results(query).all()
 
 
 @router.get("/{id}/categories")
 async def cat_per_departments(
     id: int,
-    limit: int = Query(default=50, ge=1, le=200),
-    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
-    """Retorna categorias paginadas do departamento informado."""
-    return (
+    """Retorna todas as categorias do departamento informado."""
+    query = (
         db.query(Categorias)
         .filter(Categorias.CODEPTO == id)
         .order_by(Categorias.DESCRICAO, Categorias.CODSEC)
-        .offset(offset)
-        .limit(limit)
-        .all()
     )
+    return apply_max_results(query).all()

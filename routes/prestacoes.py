@@ -27,15 +27,13 @@ def list_prestacoes(
     codusur: int | None = Query(default=None, description="Filtrar por código do vendedor"),
     venc: str | None = Query(default=None, description="Filtrar por data de vencimento (DD/MM/AAAA)"),
     emissao: str | None = Query(default=None, description="Filtrar por data de emissão (DD/MM/AAAA)"),
-    limit: int = Query(default=50, ge=1, le=200),
-    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
     current_user: UolUser = Depends(get_current_user),
 ):
-    """Retorna prestações paginadas no intervalo de vencimento solicitado."""
+    """Retorna todas as prestações no intervalo de vencimento solicitado."""
     prestacoes = PrestacaoRepository.find_all(
-        db, codcli, codfilial, dias_passados, dias_futuros, codusur, venc, emissao, limit, offset, search
+        db, codcli, codfilial, dias_passados, dias_futuros, codusur, venc, emissao, search
     )
     return _with_observacoes(prestacoes, uol_db)
 
@@ -44,14 +42,12 @@ def list_prestacoes(
 def list_prestacoes_vencidas(
     dias: int = Query(default=30, ge=1, le=365, description="Dias anteriores a considerar"),
     codcli: int | None = Query(default=None, description="Filtrar por código do cliente"),
-    limit: int = Query(default=50, ge=1, le=200),
-    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
     current_user: UolUser = Depends(get_current_user),
 ):
-    """Retorna prestações em aberto vencidas nos últimos N dias."""
-    prestacoes = PrestacaoRepository.find_vencidas(db, dias, codcli, limit, offset)
+    """Retorna todas as prestações em aberto vencidas nos últimos N dias."""
+    prestacoes = PrestacaoRepository.find_vencidas(db, dias, codcli)
     return _with_observacoes(prestacoes, uol_db)
 
 
@@ -59,14 +55,12 @@ def list_prestacoes_vencidas(
 def list_prestacoes_a_vencer(
     dias: int = Query(default=30, ge=1, le=365, description="Número de dias futuros a considerar"),
     codcli: int | None = Query(default=None, description="Filtrar por código do cliente"),
-    limit: int = Query(default=50, ge=1, le=200),
-    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
     current_user: UolUser = Depends(get_current_user),
 ):
-    """Retorna prestações em aberto que vencem nos próximos N dias."""
-    prestacoes = PrestacaoRepository.find_a_vencer(db, dias, codcli, limit, offset)
+    """Retorna todas as prestações em aberto que vencem nos próximos N dias."""
+    prestacoes = PrestacaoRepository.find_a_vencer(db, dias, codcli)
     return _with_observacoes(prestacoes, uol_db)
 
 
