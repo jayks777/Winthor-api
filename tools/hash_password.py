@@ -35,11 +35,9 @@ def main():
         print(f"\nHash gerado:\n{hashed}")
 
         usuario = input("   Nome do usuario: ").strip()
-        email   = input("   Email (Enter para pular): ").strip()
-        email_val = f"'{email}'" if email else "NULL"
         print(
-            f"\nINSERT INTO usuarios (usuario, email, senha)"
-            f"\nVALUES ('{usuario}', {email_val}, '{hashed}');"
+            f"\nINSERT INTO usuarios (usuario, senha)"
+            f"\nVALUES ('{usuario}', '{hashed}');"
         )
 
 

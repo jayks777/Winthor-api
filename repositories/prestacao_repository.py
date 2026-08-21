@@ -1,5 +1,4 @@
 from datetime import date, timedelta
-from decimal import Decimal
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
