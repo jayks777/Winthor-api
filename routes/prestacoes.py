@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-
+from datetime import date
 from core.auth import get_current_user
 from db.db import get_db
 from db.schemas import PrestacaoObservacaoUpdate, PrestacaoPorDiaResponse, PrestacaoResponse
@@ -25,8 +25,8 @@ def list_prestacoes(
     dias_futuros: int = Query(default=30, ge=0, le=365, description="Dias futuros ao vencimento a considerar"),
     search: str | None = Query(default=None, description="Busca por nome do cliente ou número da duplicata (parcial, case-insensitive)"),
     codusur: int | None = Query(default=None, description="Filtrar por código do vendedor"),
-    venc: str | None = Query(default=None, description="Filtrar por data de vencimento (DD/MM/AAAA)"),
-    emissao: str | None = Query(default=None, description="Filtrar por data de emissão (DD/MM/AAAA)"),
+    venc: date | None = Query(default=None, description="Filtrar por data de vencimento (DD/MM/AAAA)"),
+    emissao: date | None = Query(default=None, description="Filtrar por data de emissão (DD/MM/AAAA)"),
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
     current_user: UolUser = Depends(get_current_user),

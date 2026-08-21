@@ -46,13 +46,20 @@ class PrestacaoRepository:
         ]
 
     @staticmethod
-    def observacoes_por_duplicata(db: Session, duplicatas: list[int]) -> dict[int, str]:
+    def observacoes_por_duplicata(
+        db: Session,
+        duplicatas: list[int],
+    ) -> dict[int, str]:
         if not duplicatas:
             return {}
 
-        rows = db.query(UolObservacoes.duplic, UolObservacoes.obs).filter(
+        rows = db.query(
+            UolObservacoes.duplic,
+            UolObservacoes.obs,
+        ).filter(
             UolObservacoes.duplic.in_(duplicatas)
         ).all()
+
         return {row.duplic: row.obs for row in rows}
 
     @staticmethod
@@ -63,38 +70,62 @@ class PrestacaoRepository:
         dias_passados: int = 30,
         dias_futuros: int = 30,
         codusur: int | None = None,
-        venc: str | None = None,
-        emissao: str | None = None,
+        venc: date | str | None = None,
+        emissao: date | str | None = None,
         search: str | None = None,
     ):
         today = date.today()
+
         query = PrestacaoRepository._base_query(db).filter(
             Prestacoes.DTVENC >= today - timedelta(days=dias_passados),
             Prestacoes.DTVENC <= today + timedelta(days=dias_futuros),
         )
+
         if codcli is not None:
             query = query.filter(Prestacoes.CODCLI == codcli)
+
         if codfilial is not None:
             query = query.filter(Prestacoes.CODFILIAL == codfilial)
+
         if codusur is not None:
             query = query.filter(Prestacoes.CODUSUR == codusur)
+
         if search:
             term = search.strip()
             pattern = f"%{term}%"
-            # Nº da duplicata: igualdade exata para usar o índice da PK (DUPLIC).
-            # Nome do cliente: busca parcial e case-insensitive.
+
             if term.isdigit():
                 query = query.filter(
                     (Prestacoes.DUPLIC == int(term))
-                    | (func.upper(Clientes.CLIENTE).like(func.upper(pattern)))
+                    | (
+                        func.upper(Clientes.CLIENTE)
+                        .like(func.upper(pattern))
+                    )
                 )
             else:
-                query = query.filter(func.upper(Clientes.CLIENTE).like(func.upper(pattern)))
+                query = query.filter(
+                    func.upper(Clientes.CLIENTE)
+                    .like(func.upper(pattern))
+                )
+
+        # Garantir que a data seja realmente um date antes de enviar ao Oracle
         if venc:
+            if isinstance(venc, str):
+                venc = date.fromisoformat(venc)
+
             query = query.filter(Prestacoes.DTVENC == venc)
+
         if emissao:
+            if isinstance(emissao, str):
+                emissao = date.fromisoformat(emissao)
+
             query = query.filter(Prestacoes.DTEMISSAO == emissao)
-        query = query.order_by(Prestacoes.DTVENC.desc(), Prestacoes.DUPLIC)
+
+        query = query.order_by(
+            Prestacoes.DTVENC.desc(),
+            Prestacoes.DUPLIC,
+        )
+
         return apply_max_results(query).all()
 
     @staticmethod
@@ -122,12 +153,17 @@ class PrestacaoRepository:
                 Prestacoes.DTVENC <= end,
             )
         )
+
         if codfilial is not None:
             query = query.filter(Prestacoes.CODFILIAL == codfilial)
 
-        rows = query.group_by(Prestacoes.DTVENC).order_by(Prestacoes.DTVENC.asc()).all()
+        rows = (
+            query
+            .group_by(Prestacoes.DTVENC)
+            .order_by(Prestacoes.DTVENC.asc())
+            .all()
+        )
 
-        # Indexar resultados por data
         by_date: dict[date, dict] = {
             row.DTVENC: {
                 "DTVENC": row.DTVENC,
@@ -137,16 +173,22 @@ class PrestacaoRepository:
             for row in rows
         }
 
-        # Gerar lista completa com zeros nos dias sem vencimento
         result = []
+
         for i in range(dias + 1):
             day = today + timedelta(days=i)
+
             result.append(
                 by_date.get(
                     day,
-                    {"DTVENC": day, "total": 0.0, "quantidade": 0},
+                    {
+                        "DTVENC": day,
+                        "total": 0.0,
+                        "quantidade": 0,
+                    },
                 )
             )
+
         return result
 
     @staticmethod
@@ -156,14 +198,21 @@ class PrestacaoRepository:
         codcli: int | None = None,
     ):
         today = date.today()
+
         query = PrestacaoRepository._base_query(db).filter(
             Prestacoes.DTBAIXA.is_(None),
             Prestacoes.DTVENC >= today - timedelta(days=dias),
             Prestacoes.DTVENC < today,
         )
+
         if codcli is not None:
             query = query.filter(Prestacoes.CODCLI == codcli)
-        query = query.order_by(Prestacoes.DTVENC.asc(), Prestacoes.DUPLIC)
+
+        query = query.order_by(
+            Prestacoes.DTVENC.asc(),
+            Prestacoes.DUPLIC,
+        )
+
         return apply_max_results(query).all()
 
     @staticmethod
@@ -173,25 +222,49 @@ class PrestacaoRepository:
         codcli: int | None = None,
     ):
         today = date.today()
+
         query = PrestacaoRepository._base_query(db).filter(
             Prestacoes.DTBAIXA.is_(None),
             Prestacoes.DTVENC >= today,
             Prestacoes.DTVENC <= today + timedelta(days=dias),
         )
+
         if codcli is not None:
             query = query.filter(Prestacoes.CODCLI == codcli)
-        query = query.order_by(Prestacoes.DTVENC.asc(), Prestacoes.DUPLIC)
+
+        query = query.order_by(
+            Prestacoes.DTVENC.asc(),
+            Prestacoes.DUPLIC,
+        )
+
         return apply_max_results(query).all()
 
     @staticmethod
     def find_by_duplic(db: Session, duplic: int):
-        return PrestacaoRepository._base_query(db).filter(Prestacoes.DUPLIC == duplic).first()
+        return (
+            PrestacaoRepository
+            ._base_query(db)
+            .filter(Prestacoes.DUPLIC == duplic)
+            .first()
+        )
 
     @staticmethod
-    def upsert_observacao(db: Session, duplic: int, observacao: str) -> UolObservacoes:
-        registro = db.query(UolObservacoes).filter(UolObservacoes.duplic == duplic).one_or_none()
+    def upsert_observacao(
+        db: Session,
+        duplic: int,
+        observacao: str,
+    ) -> UolObservacoes:
+        registro = (
+            db.query(UolObservacoes)
+            .filter(UolObservacoes.duplic == duplic)
+            .one_or_none()
+        )
+
         if registro is None:
-            registro = UolObservacoes(duplic=duplic, obs=observacao)
+            registro = UolObservacoes(
+                duplic=duplic,
+                obs=observacao,
+            )
             db.add(registro)
         else:
             registro.obs = observacao
@@ -202,4 +275,5 @@ class PrestacaoRepository:
         except Exception:
             db.rollback()
             raise
+
         return registro
