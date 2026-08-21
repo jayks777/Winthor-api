@@ -63,6 +63,8 @@ class PrestacaoRepository:
         dias_passados: int = 30,
         dias_futuros: int = 30,
         codusur: int | None = None,
+        venc: str | None = None,
+        emissao: str | None = None,
         limit: int = 50,
         offset: int = 0,
         search: str | None = None,
@@ -84,6 +86,10 @@ class PrestacaoRepository:
                 func.upper(Clientes.CLIENTE).like(func.upper(term))
                 | func.to_char(Prestacoes.DUPLIC).like(term)
             )
+        if venc:
+            query = query.filter(Prestacoes.DTVENC == venc)
+        if emissao:
+            query = query.filter(Prestacoes.DTEMISSAO == emissao)
         return query.order_by(Prestacoes.DTVENC.desc(), Prestacoes.DUPLIC).offset(offset).limit(limit).all()
 
     @staticmethod
