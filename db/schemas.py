@@ -16,6 +16,8 @@ class UserResponse(BaseModel):
     id: int
     usuario: str
     role: str
+    codusur: int | None = None
+    codsupervisor: int | None = None
 
     class Config:
         from_attributes = True
@@ -91,3 +93,4 @@ class VendaPorVendedorResponse(BaseModel):
     PVENDA: Decimal
     QT: Decimal
     TOTPESO: Decimal
+    META: Decimal

@@ -94,6 +94,8 @@ class ItensPedido(Base):
     __tablename__ = 'PCPEDI'
 
     NUMPED = Column(Integer, primary_key=True)
+    NUMSEQ = Column(Integer, primary_key=True)
+
     CODPROD = Column(Integer)
     QT = Column(Numeric(15, 3))
     PVENDA = Column(Numeric(15, 2))
@@ -106,3 +108,13 @@ class Supervisores(Base):
     
     CODSUPERVISOR = Column(Integer, primary_key=True)
     NOME = Column(String(150))
+
+'''class UolUser(base):
+    __tablename__ = "usuarios"
+
+    id = Column(Integer, primary_key=True)
+    usuario = Column(String(100))
+    senha = Column(String(72))  
+    role = Column(String(50))
+    codusur = Column(Integer)
+    codsupervisor = Column(Integer)'''
