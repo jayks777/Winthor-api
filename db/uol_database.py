@@ -47,6 +47,7 @@ class UolUser(base):
     id = Column(Integer, primary_key=True)
     usuario = Column(String(100))
     senha = Column(String(72))  
+    role = Column(String(50))
 
 class UolObservacoes(base):
     __tablename__ = "prestacoes"

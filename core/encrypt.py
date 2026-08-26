@@ -1,12 +1,8 @@
 import os
 from datetime import datetime, timedelta, timezone
 
-import dotenv
 from jose import jwt
 from passlib.context import CryptContext
-
-dotenv.load_dotenv()
-
 
 def get_required_env(name: str, default: str | None = None) -> str:
     value = os.getenv(name, default)

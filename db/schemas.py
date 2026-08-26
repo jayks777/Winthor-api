@@ -15,7 +15,7 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     usuario: str
-    email: str | None = None
+    role: str
 
     class Config:
         from_attributes = True
@@ -75,3 +75,19 @@ class UsuarioResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class MetasResponse(BaseModel):
+    CODUSUR: int
+    DATA: date
+    VLVENDAPREV: float
+
+    class Config:
+        from_attributes = True
+
+class VendaPorVendedorResponse(BaseModel):
+    CODUSUR: int
+    NOME: str
+    QTCLIPOS: int
+    PVENDA: Decimal
+    QT: Decimal
+    TOTPESO: Decimal

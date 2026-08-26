@@ -1,5 +1,6 @@
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, Integer, String, Numeric, Date
+from sqlalchemy.types import Float
 
 #tabelas do WinThor
 
@@ -13,6 +14,7 @@ class Produtos(Base):
     EMBALAGEM = Column(String(100))
     UNIDADE = Column(String(3))
     CODSEC = Column(Integer)
+    PESOBRUTO = Column(Numeric(15, 3))
     CODEPTO = Column(Integer)
     
 class Categorias(Base):
@@ -66,4 +68,41 @@ class Vendedores(Base):
     __tablename__ = 'PCUSUARI'
 
     CODUSUR = Column(Integer, primary_key=True)
+    NOME = Column(String(150))
+    CODSUPERVISOR = Column(Integer)
+
+class Metas(Base):
+    __tablename__ =  'PCMETARCA'
+
+    CODUSUR = Column(Integer, primary_key=True)
+    DATA = Column(Date)
+    VLVENDAPREV = Column(Float)
+
+class Pedidos(Base):
+    __tablename__ = 'PCPEDC'
+
+    NUMPED = Column(Integer, primary_key=True)
+    CODCLI = Column(Integer)
+    CODUSUR = Column(Integer)
+    CODFILIAL = Column(Integer)
+    CONDVENDA = Column(Integer)
+    DATA = Column(Date)
+    DTCANCEL = Column(Date)
+    CODPRACA = Column(Integer)
+
+class ItensPedido(Base):
+    __tablename__ = 'PCPEDI'
+
+    NUMPED = Column(Integer, primary_key=True)
+    CODPROD = Column(Integer)
+    QT = Column(Numeric(15, 3))
+    PVENDA = Column(Numeric(15, 2))
+    VLOUTRASDESP = Column(Numeric(15, 2))
+    VLFRETE = Column(Numeric(15, 2))
+    BONIFIC = Column(String(1))
+
+class Supervisores(Base):
+    __tablename__ = 'PCSUPERV'
+    
+    CODSUPERVISOR = Column(Integer, primary_key=True)
     NOME = Column(String(150))

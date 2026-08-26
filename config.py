@@ -6,6 +6,7 @@ import os
 from slowapi.errors import RateLimitExceeded
 # pyrefly: ignore [missing-import]
 from slowapi import _rate_limit_exceeded_handler
+# pyrefly: ignore [missing-import]
 from utils.limiter import limiter
 from pathlib import Path
 
@@ -27,6 +28,7 @@ def configure_routes(app):
     from routes.clients import router as clients_router
     from routes.prestacoes import router as prestacoes_router
     from routes.usuarios import router as usuarios_router
+    from routes.relatorios import router as relatorios_router
     
     app.include_router(user_router)
     app.include_router(departments_router)
@@ -36,6 +38,7 @@ def configure_routes(app):
     app.include_router(clients_router)
     app.include_router(prestacoes_router)
     app.include_router(usuarios_router)
+    app.include_router(relatorios_router)
 
 def configure_cors(app):
     raw_origins = os.getenv("CORS_ALLOWED_ORIGINS", "*")
@@ -80,3 +83,4 @@ def configure_limiter(app):
         RateLimitExceeded,
         _rate_limit_exceeded_handler
     )
+

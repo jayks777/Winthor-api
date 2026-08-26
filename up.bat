@@ -1,5 +1,6 @@
 @echo off
 
+@REM Troque por o endereço da sua api
 cd /d "C:\App\API"
 
 color 0b
