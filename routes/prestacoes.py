@@ -11,7 +11,7 @@ router = APIRouter(prefix="/prestacoes", tags=["Prestações"])
 
 
 def _with_observacoes(prestacoes, uol_db: Session):
-    observacoes = PrestacaoRepository.observacoes_por_duplicata(
+    observacoes = PrestacaoRepository.observacoes_por_prestacoes(
         uol_db, [prestacao.DUPLIC for prestacao in prestacoes]
     )
     return PrestacaoRepository.serialize(prestacoes, observacoes)
@@ -80,6 +80,28 @@ def list_prestacoes_a_vencer_por_dia(
     return PrestacaoRepository.find_a_vencer_por_dia(db, dias, codfilial)
 
 
+@router.patch("/{duplic}/{prest}/observacao", response_model=PrestacaoResponse)
+def update_prestacao_observacao_com_prest(
+    duplic: int,
+    prest: int,
+    payload: PrestacaoObservacaoUpdate,
+    db: Session = Depends(get_db),
+    uol_db: Session = Depends(get_uol_db),
+    current_user: UolUser = Depends(get_current_user),
+):
+    """Cria ou atualiza a observação UOL de uma prestação específica (duplicata + prestação)."""
+    prestacao = PrestacaoRepository.find_by_duplic(db, duplic, prest=prest)
+    if prestacao is None:
+        raise HTTPException(status_code=404, detail="Prestação não encontrada")
+
+    observacao = payload.observacao.strip()
+    if not observacao:
+        raise HTTPException(status_code=422, detail="A observação não pode estar vazia")
+
+    PrestacaoRepository.upsert_observacao(uol_db, duplic, prest, observacao)
+    return PrestacaoRepository.serialize([prestacao], {(duplic, prest): observacao})[0]
+
+
 @router.patch("/{duplic}/observacao", response_model=PrestacaoResponse)
 def update_prestacao_observacao(
     duplic: int,
@@ -90,7 +112,8 @@ def update_prestacao_observacao(
     current_user: UolUser = Depends(get_current_user),
 ):
     """Cria ou atualiza a observação UOL de uma prestação existente."""
-    prestacao = PrestacaoRepository.find_by_duplic(db, duplic, prest)
+    target_prest = prest if prest is not None else payload.prest
+    prestacao = PrestacaoRepository.find_by_duplic(db, duplic, target_prest)
     if prestacao is None:
         raise HTTPException(status_code=404, detail="Prestação não encontrada")
 
@@ -98,5 +121,6 @@ def update_prestacao_observacao(
     if not observacao:
         raise HTTPException(status_code=422, detail="A observação não pode estar vazia")
 
-    PrestacaoRepository.upsert_observacao(uol_db, duplic, observacao)
-    return PrestacaoRepository.serialize([prestacao], {duplic: observacao})[0]
+    actual_prest = prestacao.PREST if prestacao.PREST is not None else (target_prest or 1)
+    PrestacaoRepository.upsert_observacao(uol_db, duplic, actual_prest, observacao)
+    return PrestacaoRepository.serialize([prestacao], {(duplic, actual_prest): observacao})[0]

@@ -53,7 +53,7 @@ class UolUser(base):
 
 class UolObservacoes(base):
     __tablename__ = "prestacoes"
-    __table_args__ = (UniqueConstraint("duplic", name="uq_prestacoes_duplic"),)
+    __table_args__ = (UniqueConstraint("duplic", "prest", name="uq_prestacoes_duplic_prest"),)
 
     id = Column(Integer, primary_key=True)
     duplic = Column(Integer, nullable=False)

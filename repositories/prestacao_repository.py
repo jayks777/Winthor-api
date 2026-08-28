@@ -27,7 +27,7 @@ class PrestacaoRepository:
         ).outerjoin(Clientes, Clientes.CODCLI == Prestacoes.CODCLI)
 
     @staticmethod
-    def serialize(rows, observacoes: dict[int, str] | None = None):
+    def serialize(rows, observacoes: dict | None = None):
         observacoes = observacoes or {}
         return [
             {
@@ -42,10 +42,31 @@ class PrestacaoRepository:
                 "CODCOB": row.CODCOB,
                 "CODFILIAL": row.CODFILIAL,
                 "CODUSUR": row.CODUSUR,
-                "OBS": observacoes.get(row.DUPLIC),
+                "OBS": (
+                    observacoes.get((row.DUPLIC, getattr(row, "PREST", None)))
+                    or observacoes.get(row.DUPLIC)
+                ),
             }
             for row in rows
         ]
+
+    @staticmethod
+    def observacoes_por_prestacoes(
+        db: Session,
+        duplicatas: list[int],
+    ) -> dict[tuple[int, int | None], str]:
+        if not duplicatas:
+            return {}
+
+        rows = db.query(
+            UolObservacoes.duplic,
+            UolObservacoes.prest,
+            UolObservacoes.obs,
+        ).filter(
+            UolObservacoes.duplic.in_(duplicatas)
+        ).all()
+
+        return {(row.duplic, row.prest): row.obs for row in rows}
 
     @staticmethod
     def observacoes_por_duplicata(
@@ -263,13 +284,16 @@ class PrestacaoRepository:
     @staticmethod
     def upsert_observacao(
         db: Session,
-        prest: int,
         duplic: int,
+        prest: int,
         observacao: str,
     ) -> UolObservacoes:
         registro = (
             db.query(UolObservacoes)
-            .filter(UolObservacoes.duplic == duplic)
+            .filter(
+                UolObservacoes.duplic == duplic,
+                UolObservacoes.prest == prest,
+            )
             .one_or_none()
         )
 
