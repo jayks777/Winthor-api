@@ -14,6 +14,7 @@ class PrestacaoRepository:
         """Consulta explícita das prestações e do nome do cliente no WinThor."""
         return db.query(
             Prestacoes.DUPLIC,
+            Prestacoes.PREST,
             Prestacoes.CODCLI,
             Clientes.CLIENTE,
             Prestacoes.VALOR,
@@ -31,8 +32,9 @@ class PrestacaoRepository:
         return [
             {
                 "DUPLIC": row.DUPLIC,
+                "PREST": getattr(row, "PREST", None),
                 "CODCLI": row.CODCLI,
-                "CLIENTE": row.CLIENTE,
+                "CLIENTE": getattr(row, "CLIENTE", None),
                 "VALOR": float(row.VALOR) if row.VALOR is not None else None,
                 "DTVENC": row.DTVENC,
                 "DTEMISSAO": row.DTEMISSAO,
@@ -73,6 +75,7 @@ class PrestacaoRepository:
         venc: date | str | None = None,
         emissao: date | str | None = None,
         search: str | None = None,
+        prest: int | None = None,
     ):
         today = date.today()
 
@@ -89,6 +92,9 @@ class PrestacaoRepository:
 
         if codusur is not None:
             query = query.filter(Prestacoes.CODUSUR == codusur)
+
+        if prest is not None:
+            query = query.filter(Prestacoes.PREST == prest)
 
         if search:
             term = search.strip()
@@ -124,6 +130,7 @@ class PrestacaoRepository:
         query = query.order_by(
             Prestacoes.DTVENC.desc(),
             Prestacoes.DUPLIC,
+            Prestacoes.PREST,
         )
 
         return apply_max_results(query).all()
@@ -211,6 +218,7 @@ class PrestacaoRepository:
         query = query.order_by(
             Prestacoes.DTVENC.asc(),
             Prestacoes.DUPLIC,
+            Prestacoes.PREST,
         )
 
         return apply_max_results(query).all()
@@ -235,18 +243,22 @@ class PrestacaoRepository:
         query = query.order_by(
             Prestacoes.DTVENC.asc(),
             Prestacoes.DUPLIC,
+            Prestacoes.PREST,
         )
 
         return apply_max_results(query).all()
 
     @staticmethod
-    def find_by_duplic(db: Session, duplic: int):
-        return (
+    def find_by_duplic(db: Session, duplic: int, prest: int | None = None):
+        query = (
             PrestacaoRepository
             ._base_query(db)
             .filter(Prestacoes.DUPLIC == duplic)
-            .first()
         )
+        if prest is not None:
+            query = query.filter(Prestacoes.PREST == prest)
+
+        return query.first()
 
     @staticmethod
     def upsert_observacao(

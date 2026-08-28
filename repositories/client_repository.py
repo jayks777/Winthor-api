@@ -1,4 +1,4 @@
-﻿from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session
 from db.models import Clientes, Prestacoes
 from core.settings import apply_max_results
 
@@ -29,6 +29,6 @@ class ClientRepository:
         query = (
             db.query(Prestacoes)
             .filter(Prestacoes.CODCLI == codcli)
-            .order_by(Prestacoes.DTVENC.desc(), Prestacoes.DUPLIC)
+            .order_by(Prestacoes.DTVENC.desc(), Prestacoes.DUPLIC, Prestacoes.PREST)
         )
         return apply_max_results(query).all()

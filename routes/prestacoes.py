@@ -27,13 +27,14 @@ def list_prestacoes(
     codusur: int | None = Query(default=None, description="Filtrar por código do vendedor"),
     venc: date | None = Query(default=None, description="Filtrar por data de vencimento (DD/MM/AAAA)"),
     emissao: date | None = Query(default=None, description="Filtrar por data de emissão (DD/MM/AAAA)"),
+    prest: int | None = Query(default=None, description="Filtrar por número da prestação/parcela"),
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
     current_user: UolUser = Depends(get_current_user),
 ):
     """Retorna todas as prestações no intervalo de vencimento solicitado."""
     prestacoes = PrestacaoRepository.find_all(
-        db, codcli, codfilial, dias_passados, dias_futuros, codusur, venc, emissao, search
+        db, codcli, codfilial, dias_passados, dias_futuros, codusur, venc, emissao, search, prest
     )
     return _with_observacoes(prestacoes, uol_db)
 
@@ -83,12 +84,13 @@ def list_prestacoes_a_vencer_por_dia(
 def update_prestacao_observacao(
     duplic: int,
     payload: PrestacaoObservacaoUpdate,
+    prest: int | None = Query(default=None, description="Número da prestação/parcela (opcional)"),
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
     current_user: UolUser = Depends(get_current_user),
 ):
     """Cria ou atualiza a observação UOL de uma prestação existente."""
-    prestacao = PrestacaoRepository.find_by_duplic(db, duplic)
+    prestacao = PrestacaoRepository.find_by_duplic(db, duplic, prest=prest)
     if prestacao is None:
         raise HTTPException(status_code=404, detail="Prestação não encontrada")
 

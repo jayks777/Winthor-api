@@ -57,4 +57,5 @@ class UolObservacoes(base):
 
     id = Column(Integer, primary_key=True)
     duplic = Column(Integer, nullable=False)
+    prest = Column(Integer, nullable=False)
     obs = Column(String(200))

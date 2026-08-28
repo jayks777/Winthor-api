@@ -55,6 +55,8 @@ class Prestacoes(Base):
     __tablename__ = 'PCPREST'
 
     DUPLIC = Column(Integer, primary_key=True)  # Número da duplicata
+    PREST = Column(Integer, primary_key=True)  # Número da prestação
+    
     CODCLI = Column(Integer)
     VALOR = Column(Numeric(15, 2))
     DTVENC = Column(Date)         # Data de vencimento
