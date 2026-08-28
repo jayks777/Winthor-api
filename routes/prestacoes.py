@@ -90,7 +90,7 @@ def update_prestacao_observacao(
     current_user: UolUser = Depends(get_current_user),
 ):
     """Cria ou atualiza a observação UOL de uma prestação existente."""
-    prestacao = PrestacaoRepository.find_by_duplic(db, duplic, prest=prest)
+    prestacao = PrestacaoRepository.find_by_duplic(db, duplic, prest)
     if prestacao is None:
         raise HTTPException(status_code=404, detail="Prestação não encontrada")
 

@@ -263,6 +263,7 @@ class PrestacaoRepository:
     @staticmethod
     def upsert_observacao(
         db: Session,
+        prest: int,
         duplic: int,
         observacao: str,
     ) -> UolObservacoes:
@@ -275,6 +276,7 @@ class PrestacaoRepository:
         if registro is None:
             registro = UolObservacoes(
                 duplic=duplic,
+                prest=prest,
                 obs=observacao,
             )
             db.add(registro)
