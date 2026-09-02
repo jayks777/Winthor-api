@@ -181,6 +181,10 @@ def vendas_por_vendedor(
             Vendedores.NOME,
             metas_subquery.c.META,
         )
+        
+        .order_by(
+            func.sum(valor_venda).desc()
+        )
     )
 
     stmt = apply_vendedor_scope(stmt, current_user)
