@@ -43,7 +43,7 @@ class ClienteResponse(BaseModel):
 
 class PrestacaoResponse(BaseModel):
     DUPLIC: int
-    PREST: int | str | None = None # Número da prestação
+    PREST: str | None = None # Número da prestação
     CODCLI: int | None = None
     CLIENTE: str | None = None
     VALOR: Decimal | float | None = None

@@ -27,7 +27,7 @@ def list_prestacoes(
     codusur: int | None = Query(default=None, description="Filtrar por código do vendedor"),
     venc: date | None = Query(default=None, description="Filtrar por data de vencimento (DD/MM/AAAA)"),
     emissao: date | None = Query(default=None, description="Filtrar por data de emissão (DD/MM/AAAA)"),
-    prest: int | None = Query(default=None, description="Filtrar por número da prestação/parcela"),
+    prest: str | None = Query(default=None, description="Filtrar por número da prestação/parcela"),
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
     current_user: UolUser = Depends(get_current_user),
@@ -83,7 +83,7 @@ def list_prestacoes_a_vencer_por_dia(
 @router.patch("/{duplic}/{prest}/observacao", response_model=PrestacaoResponse)
 def update_prestacao_observacao_com_prest(
     duplic: int,
-    prest: int,
+    prest: str,
     payload: PrestacaoObservacaoUpdate,
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
@@ -106,13 +106,13 @@ def update_prestacao_observacao_com_prest(
 def update_prestacao_observacao(
     duplic: int,
     payload: PrestacaoObservacaoUpdate,
-    prest: int | None = Query(default=None, description="Número da prestação/parcela (opcional)"),
+    prest: str | None = Query(default=None, description="Número da prestação/parcela (opcional)"),
     db: Session = Depends(get_db),
     uol_db: Session = Depends(get_uol_db),
     current_user: UolUser = Depends(get_current_user),
 ):
     """Cria ou atualiza a observação UOL de uma prestação existente."""
-    target_prest = prest if prest is not None else payload.prest
+    target_prest = prest
     prestacao = PrestacaoRepository.find_by_duplic(db, duplic, target_prest)
     if prestacao is None:
         raise HTTPException(status_code=404, detail="Prestação não encontrada")

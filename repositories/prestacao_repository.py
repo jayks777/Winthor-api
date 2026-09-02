@@ -5,7 +5,32 @@ from sqlalchemy.orm import Session
 
 from db.models import Clientes, Prestacoes
 from db.uol_database import UolObservacoes
-from core.settings import apply_max_results
+from core.cache import TTLCache
+from core.settings import (
+    OBS_IN_LIST_LIMIT,
+    PRESTACOES_CACHE_TTL,
+    apply_max_results,
+)
+
+_prestacoes_cache = TTLCache()
+
+
+def _cached(label: str, key_params: tuple, fn):
+    """Cacheia o resultado de uma query de prestações por TTL curto.
+
+    O link com a base Oracle é o gargalo (latência + transferência por linha).
+    As prestações mudam poucas vezes ao dia, então cachear o resultado por um
+    TTL curto elimina a re-transferência de milhares de linhas em chamadas
+    repetidas (ex.: dashboard).
+    """
+    key = (label, date.today().isoformat()) + tuple(key_params)
+    cached = _prestacoes_cache.get(key)
+    if cached is not None:
+        return cached
+
+    result = fn()
+    _prestacoes_cache.set(key, result, PRESTACOES_CACHE_TTL)
+    return result
 
 
 class PrestacaoRepository:
@@ -27,6 +52,12 @@ class PrestacaoRepository:
         ).outerjoin(Clientes, Clientes.CODCLI == Prestacoes.CODCLI)
 
     @staticmethod
+    def _obs_key(row) -> tuple[int, str | None]:
+        """Chave normalizada (duplic, prest) usada nos dicionários de observação."""
+        prest = getattr(row, "PREST", None) if not isinstance(row, dict) else row.get("PREST")
+        return (row.DUPLIC, str(prest) if prest is not None else None)
+
+    @staticmethod
     def serialize(rows, observacoes: dict | None = None):
         observacoes = observacoes or {}
         return [
@@ -42,10 +73,7 @@ class PrestacaoRepository:
                 "CODCOB": row.CODCOB,
                 "CODFILIAL": row.CODFILIAL,
                 "CODUSUR": row.CODUSUR,
-                "OBS": (
-                    observacoes.get((row.DUPLIC, getattr(row, "PREST", None)))
-                    or observacoes.get(row.DUPLIC)
-                ),
+                "OBS": observacoes.get(PrestacaoRepository._obs_key(row)),
             }
             for row in rows
         ]
@@ -58,15 +86,34 @@ class PrestacaoRepository:
         if not duplicatas:
             return {}
 
-        rows = db.query(
-            UolObservacoes.duplic,
-            UolObservacoes.prest,
-            UolObservacoes.obs,
-        ).filter(
-            UolObservacoes.duplic.in_(duplicatas)
-        ).all()
+        if len(duplicatas) <= OBS_IN_LIST_LIMIT:
+            rows = db.query(
+                UolObservacoes.duplic,
+                UolObservacoes.prest,
+                UolObservacoes.obs,
+            ).filter(
+                UolObservacoes.duplic.in_(duplicatas)
+            ).all()
+        else:
+            # Lista grande (ex.: janela inteira com 13k duplicatas). Um
+            # IN(...) com milhares de valores é lento para o MySQL gerar.
+            # A tabela de observações é pequena (anotações manuais), então
+            # trazê-la inteira e filtrar em Python é mais rápido.
+            rows = db.query(
+                UolObservacoes.duplic,
+                UolObservacoes.prest,
+                UolObservacoes.obs,
+            ).all()
 
-        return {(row.duplic, row.prest): row.obs for row in rows}
+        duplic_set = set(duplicatas)
+
+        # O PREST vem como varchar no WinThor, mas integer na base UOL.
+        # Normaliza a chave para string para casar com a serialização.
+        return {
+            (row.duplic, str(row.prest) if row.prest is not None else None): row.obs
+            for row in rows
+            if row.duplic in duplic_set
+        }
 
     @staticmethod
     def observacoes_por_duplicata(
@@ -96,65 +143,73 @@ class PrestacaoRepository:
         venc: date | str | None = None,
         emissao: date | str | None = None,
         search: str | None = None,
-        prest: int | None = None,
+        prest: str | None = None,
     ):
-        today = date.today()
+        def _run():
+            nonlocal venc, emissao
+            today = date.today()
 
-        query = PrestacaoRepository._base_query(db).filter(
-            Prestacoes.DTVENC >= today - timedelta(days=dias_passados),
-            Prestacoes.DTVENC <= today + timedelta(days=dias_futuros),
-        )
+            query = PrestacaoRepository._base_query(db).filter(
+                Prestacoes.DTVENC >= today - timedelta(days=dias_passados),
+                Prestacoes.DTVENC <= today + timedelta(days=dias_futuros),
+            )
 
-        if codcli is not None:
-            query = query.filter(Prestacoes.CODCLI == codcli)
+            if codcli is not None:
+                query = query.filter(Prestacoes.CODCLI == codcli)
 
-        if codfilial is not None:
-            query = query.filter(Prestacoes.CODFILIAL == codfilial)
+            if codfilial is not None:
+                query = query.filter(Prestacoes.CODFILIAL == codfilial)
 
-        if codusur is not None:
-            query = query.filter(Prestacoes.CODUSUR == codusur)
+            if codusur is not None:
+                query = query.filter(Prestacoes.CODUSUR == codusur)
 
-        if prest is not None:
-            query = query.filter(Prestacoes.PREST == prest)
+            if prest is not None:
+                query = query.filter(Prestacoes.PREST == prest)
 
-        if search:
-            term = search.strip()
-            pattern = f"%{term}%"
+            if search:
+                term = search.strip()
+                pattern = f"%{term}%"
 
-            if term.isdigit():
-                query = query.filter(
-                    (Prestacoes.DUPLIC == int(term))
-                    | (
+                if term.isdigit():
+                    query = query.filter(
+                        (Prestacoes.DUPLIC == int(term))
+                        | (
+                            func.upper(Clientes.CLIENTE)
+                            .like(func.upper(pattern))
+                        )
+                    )
+                else:
+                    query = query.filter(
                         func.upper(Clientes.CLIENTE)
                         .like(func.upper(pattern))
                     )
-                )
-            else:
-                query = query.filter(
-                    func.upper(Clientes.CLIENTE)
-                    .like(func.upper(pattern))
-                )
 
-        # Garantir que a data seja realmente um date antes de enviar ao Oracle
-        if venc:
-            if isinstance(venc, str):
-                venc = date.fromisoformat(venc)
+            # Garantir que a data seja realmente um date antes de enviar ao Oracle
+            if venc:
+                if isinstance(venc, str):
+                    venc = date.fromisoformat(venc)
 
-            query = query.filter(Prestacoes.DTVENC == venc)
+                query = query.filter(Prestacoes.DTVENC == venc)
 
-        if emissao:
-            if isinstance(emissao, str):
-                emissao = date.fromisoformat(emissao)
+            if emissao:
+                if isinstance(emissao, str):
+                    emissao = date.fromisoformat(emissao)
 
-            query = query.filter(Prestacoes.DTEMISSAO == emissao)
+                query = query.filter(Prestacoes.DTEMISSAO == emissao)
 
-        query = query.order_by(
-            Prestacoes.DTVENC.desc(),
-            Prestacoes.DUPLIC,
-            Prestacoes.PREST,
+            query = query.order_by(
+                Prestacoes.DTVENC.desc(),
+                Prestacoes.DUPLIC,
+                Prestacoes.PREST,
+            )
+
+            return apply_max_results(query).all()
+
+        return _cached(
+            "find_all",
+            (codcli, codfilial, dias_passados, dias_futuros, codusur, venc, emissao, search, prest),
+            _run,
         )
-
-        return apply_max_results(query).all()
 
     @staticmethod
     def find_a_vencer_por_dia(
@@ -225,24 +280,27 @@ class PrestacaoRepository:
         dias: int = 30,
         codcli: int | None = None,
     ):
-        today = date.today()
+        def _run():
+            today = date.today()
 
-        query = PrestacaoRepository._base_query(db).filter(
-            Prestacoes.DTBAIXA.is_(None),
-            Prestacoes.DTVENC >= today - timedelta(days=dias),
-            Prestacoes.DTVENC < today,
-        )
+            query = PrestacaoRepository._base_query(db).filter(
+                Prestacoes.DTBAIXA.is_(None),
+                Prestacoes.DTVENC >= today - timedelta(days=dias),
+                Prestacoes.DTVENC < today,
+            )
 
-        if codcli is not None:
-            query = query.filter(Prestacoes.CODCLI == codcli)
+            if codcli is not None:
+                query = query.filter(Prestacoes.CODCLI == codcli)
 
-        query = query.order_by(
-            Prestacoes.DTVENC.asc(),
-            Prestacoes.DUPLIC,
-            Prestacoes.PREST,
-        )
+            query = query.order_by(
+                Prestacoes.DTVENC.asc(),
+                Prestacoes.DUPLIC,
+                Prestacoes.PREST,
+            )
 
-        return apply_max_results(query).all()
+            return apply_max_results(query).all()
+
+        return _cached("find_vencidas", (dias, codcli), _run)
 
     @staticmethod
     def find_a_vencer(
@@ -250,27 +308,30 @@ class PrestacaoRepository:
         dias: int = 30,
         codcli: int | None = None,
     ):
-        today = date.today()
+        def _run():
+            today = date.today()
 
-        query = PrestacaoRepository._base_query(db).filter(
-            Prestacoes.DTBAIXA.is_(None),
-            Prestacoes.DTVENC >= today,
-            Prestacoes.DTVENC <= today + timedelta(days=dias),
-        )
+            query = PrestacaoRepository._base_query(db).filter(
+                Prestacoes.DTBAIXA.is_(None),
+                Prestacoes.DTVENC >= today,
+                Prestacoes.DTVENC <= today + timedelta(days=dias),
+            )
 
-        if codcli is not None:
-            query = query.filter(Prestacoes.CODCLI == codcli)
+            if codcli is not None:
+                query = query.filter(Prestacoes.CODCLI == codcli)
 
-        query = query.order_by(
-            Prestacoes.DTVENC.asc(),
-            Prestacoes.DUPLIC,
-            Prestacoes.PREST,
-        )
+            query = query.order_by(
+                Prestacoes.DTVENC.asc(),
+                Prestacoes.DUPLIC,
+                Prestacoes.PREST,
+            )
 
-        return apply_max_results(query).all()
+            return apply_max_results(query).all()
+
+        return _cached("find_a_vencer", (dias, codcli), _run)
 
     @staticmethod
-    def find_by_duplic(db: Session, duplic: int, prest: int | None = None):
+    def find_by_duplic(db: Session, duplic: int, prest: str | None = None):
         query = (
             PrestacaoRepository
             ._base_query(db)
@@ -285,14 +346,21 @@ class PrestacaoRepository:
     def upsert_observacao(
         db: Session,
         duplic: int,
-        prest: int,
+        prest: str | None,
         observacao: str,
     ) -> UolObservacoes:
+        # O PREST é varchar no WinThor, mas integer na tabela UOL.
+        prest_value = (
+            int(prest)
+            if prest is not None and str(prest).strip().isdigit()
+            else None
+        )
+
         registro = (
             db.query(UolObservacoes)
             .filter(
                 UolObservacoes.duplic == duplic,
-                UolObservacoes.prest == prest,
+                UolObservacoes.prest == prest_value,
             )
             .one_or_none()
         )
@@ -300,7 +368,7 @@ class PrestacaoRepository:
         if registro is None:
             registro = UolObservacoes(
                 duplic=duplic,
-                prest=prest,
+                prest=prest_value,
                 obs=observacao,
             )
             db.add(registro)

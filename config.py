@@ -8,6 +8,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 # pyrefly: ignore [missing-import]
 from utils.limiter import limiter
+from starlette.middleware.gzip import GZipMiddleware
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -18,6 +19,7 @@ def configure_all(app):
     configure_cors(app)
     configure_routes(app)
     configure_limiter(app)
+    configure_compression(app)
 
 def configure_routes(app):
     from routes.user import router as user_router
@@ -60,6 +62,18 @@ def configure_cors(app):
         allow_credentials=True,
         allow_methods=["GET", "POST", "OPTIONS", "PATCH", "PUT", "DELETE"],
         allow_headers=["*"],
+    )
+
+def configure_compression(app):
+    """Comprime respostas grandes (ex.: listas com milhares de prestações).
+
+    compresslevel=1: compressão bem mais rápida que o nível 9 e com taxa
+    praticamente igual para JSON (texto repetitivo).
+    """
+    app.add_middleware(
+        GZipMiddleware,
+        minimum_size=1024,
+        compresslevel=1,
     )
     
 def configure_mail_channel():
