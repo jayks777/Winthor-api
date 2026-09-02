@@ -5,11 +5,13 @@ from core.settings import apply_max_results
 
 class UserRepository:
     @staticmethod
-    def get_all(db: Session, codusur: int | None = None) -> list[Vendedores]:
+    def get_all(db: Session, codusur: int | None = None, codsupervisor: int | None = None) -> list[Vendedores]:
         """Retorna todos os vendedores do sistema ordenados por CODUSUR."""
         query = db.query(Vendedores)
         if codusur is not None:
             query = query.filter(Vendedores.CODUSUR == codusur)
+        if codsupervisor is not None:
+            query = query.filter(Vendedores.CODSUPERVISOR == codsupervisor)
         query = query.order_by(Vendedores.CODUSUR)
         return apply_max_results(query).all()
     
@@ -22,8 +24,5 @@ class UserRepository:
         return db.query(User).filter(User.id == id).first()
     
     @staticmethod
-    def create(db: Session, user: User):
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
+    def find_by_supervisor(db: Session, codsupervisor: int):
+        return db.query(User).filter(User.codsupervisor == codsupervisor).first()

@@ -13,10 +13,11 @@ router = APIRouter(tags=["Vendedores - Winthor"], prefix="/user")
 def get_all_users(
     db: Session = Depends(get_db),
     codusur: int | None = None,
+    codsupervisor: int | None = None,
     current_user = Depends(get_current_user),
 ):
     if not current_user:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     """Retorna todos os vendedores (usuarios) do sistema."""
-    return UserRepository.get_all(db, codusur=codusur)
+    return UserRepository.get_all(db, codusur=codusur, codsupervisor=codsupervisor)

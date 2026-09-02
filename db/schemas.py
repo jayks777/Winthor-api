@@ -95,3 +95,10 @@ class VendaPorVendedorResponse(BaseModel):
     QT: Decimal
     TOTPESO: Decimal
     META: Decimal
+    
+class SupervisorResponse(BaseModel):
+    CODSUPERVISOR: int
+    NOME: str | None = None
+
+    class Config:
+        from_attributes = True
