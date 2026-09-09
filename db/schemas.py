@@ -3,7 +3,9 @@ from pydantic import BaseModel, Field
 class ContactForm(BaseModel):
     nome: str = Field(min_length=2, max_length=120)
     empresa: str | None = Field(default=None, max_length=120)
-    email: str
+    email: str = Field(pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    telefone: str | None = Field(default=None, max_length=20)
+    cidade: str | None = Field(default=None, max_length=120)
     mensagem: str = Field(min_length=10, max_length=4000)
 
 

@@ -17,6 +17,10 @@ Nome: {form.nome}
 
 Empresa: {form.empresa}
 
+cidade: {form.cidade}
+
+Telefone: {form.telefone}
+
 Email: {form.email}
 
 Mensagem:
