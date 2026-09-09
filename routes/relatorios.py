@@ -1,7 +1,7 @@
-from datetime import date
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from sqlalchemy.orm import Session
 
 from db.uol_database import UolUser as User
@@ -30,7 +30,9 @@ router = APIRouter(
 @router.get(
     "/vendas-por-vendedor",
     response_model=list[VendaPorVendedorResponse],
-    dependencies=[Depends(require_roles("admin", "manager", "user"))],
+    dependencies=[
+        Depends(require_roles("admin", "manager", "user"))
+    ],
 )
 def vendas_por_vendedor(
     datai: date = Query(...),
@@ -40,9 +42,8 @@ def vendas_por_vendedor(
     db: Session = Depends(get_db),
 ):
 
-    # ==========================================================
-    # SUBQUERY: META POR VENDEDOR NO PERÍODO
-    # ==========================================================
+    data_inicio = datai
+    data_fim_exclusivo = dataf + timedelta(days=1)
 
     metas_subquery = (
         select(
@@ -52,7 +53,8 @@ def vendas_por_vendedor(
             ).label("META"),
         )
         .where(
-            Metas.DATA.between(datai, dataf)
+            Metas.DATA >= data_inicio,
+            Metas.DATA < data_fim_exclusivo,
         )
         .group_by(
             Metas.CODUSUR
@@ -60,39 +62,23 @@ def vendas_por_vendedor(
         .subquery()
     )
 
-    # ==========================================================
-    # CÁLCULO DO VALOR DE VENDA
-    # ==========================================================
-
-    valor_venda = func.round(
+    valor_venda = (
         func.nvl(ItensPedido.QT, 0)
         * (
             func.nvl(ItensPedido.PVENDA, 0)
             + func.nvl(ItensPedido.VLOUTRASDESP, 0)
             + func.nvl(ItensPedido.VLFRETE, 0)
-        ),
-        2,
+        )
     )
 
-    # ==========================================================
-    # CÁLCULO DO PESO
-    # ==========================================================
-
-    peso_total = func.round(
+    peso_total = (
         func.nvl(Produtos.PESOBRUTO, 0)
-        * func.nvl(ItensPedido.QT, 0),
-        2,
+        * func.nvl(ItensPedido.QT, 0)
     )
-
-    # ==========================================================
-    # CONSULTA PRINCIPAL
-    # ==========================================================
-
-    stmt = (
+    
+    vendas_subquery = (
         select(
             Pedidos.CODUSUR.label("CODUSUR"),
-
-            Vendedores.NOME.label("NOME"),
 
             func.count(
                 func.distinct(Pedidos.CODCLI)
@@ -109,23 +95,20 @@ def vendas_por_vendedor(
             func.sum(
                 peso_total
             ).label("TOTPESO"),
-
-            func.nvl(
-                metas_subquery.c.META,
-                0,
-            ).label("META"),
         )
 
-        .select_from(ItensPedido)
+        .select_from(Pedidos)
 
         .join(
-            Pedidos,
-            ItensPedido.NUMPED == Pedidos.NUMPED,
-        )
+            ItensPedido,
+            and_(
+                ItensPedido.NUMPED == Pedidos.NUMPED,
 
-        .join(
-            Vendedores,
-            Pedidos.CODUSUR == Vendedores.CODUSUR,
+                func.nvl(
+                    ItensPedido.BONIFIC,
+                    "N",
+                ) == "N",
+            ),
         )
 
         .join(
@@ -133,24 +116,10 @@ def vendas_por_vendedor(
             ItensPedido.CODPROD == Produtos.CODPROD,
         )
 
-        .join(
-            Clientes,
-            Pedidos.CODCLI == Clientes.CODCLI,
-        )
-
-        # Meta do vendedor
-        .outerjoin(
-            metas_subquery,
-            metas_subquery.c.CODUSUR == Pedidos.CODUSUR,
-        )
-
         .where(
-            Vendedores.CODSUPERVISOR != 9999,
+            Pedidos.DATA >= data_inicio,
 
-            Pedidos.DATA.between(
-                datai,
-                dataf,
-            ),
+            Pedidos.DATA < data_fim_exclusivo,
 
             Pedidos.CODFILIAL == codfilial,
 
@@ -168,29 +137,83 @@ def vendas_por_vendedor(
                 98,
             ]),
 
-            func.nvl(
-                ItensPedido.BONIFIC,
-                "N",
-            ) == "N",
-
             Pedidos.DTCANCEL.is_(None),
         )
 
         .group_by(
             Pedidos.CODUSUR,
-            Vendedores.NOME,
-            metas_subquery.c.META,
         )
-        
+
+        .subquery()
+    )
+
+    stmt = (
+        select(
+            Vendedores.CODUSUR.label("CODUSUR"),
+
+            Vendedores.NOME.label("NOME"),
+
+            func.nvl(
+                vendas_subquery.c.QTCLIPOS,
+                0,
+            ).label("QTCLIPOS"),
+
+            func.nvl(
+                vendas_subquery.c.PVENDA,
+                0,
+            ).label("PVENDA"),
+
+            func.nvl(
+                vendas_subquery.c.QT,
+                0,
+            ).label("QT"),
+
+            func.nvl(
+                vendas_subquery.c.TOTPESO,
+                0,
+            ).label("TOTPESO"),
+
+            func.nvl(
+                metas_subquery.c.META,
+                0,
+            ).label("META"),
+        )
+
+        .select_from(Vendedores)
+
+        .outerjoin(
+            vendas_subquery,
+            vendas_subquery.c.CODUSUR
+            == Vendedores.CODUSUR,
+        )
+
+        .outerjoin(
+            metas_subquery,
+            metas_subquery.c.CODUSUR
+            == Vendedores.CODUSUR,
+        )
+
+        .where(
+            Vendedores.CODSUPERVISOR != 9999,
+        )
+
         .order_by(
-            func.sum(valor_venda).desc()
+            func.nvl(
+                vendas_subquery.c.PVENDA,
+                0,
+            ).desc()
         )
     )
 
-    stmt = apply_vendedor_scope(stmt, current_user)
+    stmt = apply_vendedor_scope(
+        stmt,
+        current_user,
+    )
 
-    result = db.execute(
-        stmt
-    ).mappings().all()
+    result = (
+        db.execute(stmt)
+        .mappings()
+        .all()
+    )
 
     return result
