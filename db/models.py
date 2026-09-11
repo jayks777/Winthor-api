@@ -65,6 +65,7 @@ class Prestacoes(Base):
     CODCOB = Column(String(10))   # Tipo de cobrança
     CODFILIAL = Column(Integer)
     CODUSUR = Column(Integer) #Código do vendedor
+    CODBARRA = Column(String(44))  # Código de barras da duplicata
 
 class Vendedores(Base):
     __tablename__ = 'PCUSUARI'

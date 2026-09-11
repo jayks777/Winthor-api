@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, Integer, String, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, String, UniqueConstraint, Boolean 
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.engine import URL
 import os
@@ -59,3 +59,22 @@ class UolObservacoes(base):
     duplic = Column(Integer, nullable=False)
     prest = Column(Integer, nullable=False)
     obs = Column(String(200))
+
+class UolClientes(base):
+    __tablename__ = "clientes"
+
+    ID = Column(Integer, primary_key=True)
+    CODCLI = Column(Integer)
+    NUMDOC = Column(String(14)) #numero do CNPJ ou CPF
+    SENHA = Column(String(20)) #senha do cliente
+    NOME = Column(String(100)) #nome do cliente
+    PERMISSAO = Column(Boolean) #permissão de acesso ao portal
+    
+class UolVendedores(base):
+    __tablename__ = "vendedores"
+
+    CODUSUR = Column(Integer, primary_key=True)
+    NOME = Column(String(150))
+    CODSUPERVISOR = Column(Integer, nullable=True)
+    FOTO = Column(String(200), nullable=True) #caminho da foto do vendedor
+    TELEFONE = Column(String(20), nullable=True) #telefone do vendedor
