@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.auth import PORTAL_ACCESS_TOKEN_COOKIE_NAME, get_current_client
 from core.encrypt import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, verify_password
-from db.uol_database import UolClientes, get_db
+from db.uol_database import UolClientes, UolVendedores, get_db
 
 
 router = APIRouter(
@@ -172,11 +172,33 @@ def client_logout(response: Response):
 @router.get("/me")
 def client_me(
     current_client: UolClientes = Depends(get_current_client),
+    db: Session = Depends(get_db),
 ):
+    vendedor = None
+
+    if current_client.CODUSUR is not None:
+        vendedor = (
+            db.query(UolVendedores)
+            .filter(
+                UolVendedores.CODUSUR == current_client.CODUSUR
+            )
+            .first()
+        )
+
     return {
         "id": current_client.ID,
         "codcli": current_client.CODCLI,
         "numdoc": current_client.NUMDOC,
         "nome": current_client.NOME,
         "permissao": current_client.PERMISSAO,
+        "vendedor": (
+            {
+                "codusur": vendedor.CODUSUR,
+                "nome": vendedor.NOME,
+                "telefone": vendedor.TELEFONE,
+                "foto": vendedor.FOTO,
+            }
+            if vendedor
+            else None
+        ),
     }

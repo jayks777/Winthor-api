@@ -1,14 +1,16 @@
 # a fazer
 
-- [x] Remover Limit dos endpoints de forma segura para produção (URGENTE)
-  - `limit`/`offset` removidos dos endpoints de listagem (`/departments`,
-    `/clients`, `/prestacoes`, `/user`) e dos repositórios.
-  - Agora retornam **todos** os registros; teto de segurança server-side via
-    `API_MAX_RESULTS` (padrão 50000; 0 = sem limite) no `.env`.
-- [x] Investigar lentidão na API
-  - Relatório detalhado em `PERFORMANCE.md`.
-  - Corrigido: `/product/random` (order by dbms_random.value) e busca de
-    duplicata em `/prestacoes` (to_char que impedia índice).
-  - Pendência: índices no banco (ver `PERFORMANCE.md`).
-- [ ] Criar/confirmar índices no banco: PCPREST(DTVENC), PCPREST(DTBAIXA),
-      PCPREST(CODCLI), PCPREST(CODFILIAL), PCCLIENT(CLIENTE). 
+## [x] Rotas e dependências para sustentar um portal do cliente
+
+- Deve fazer a autenticação de um cliente pelo numdoc + senha cadastrado no nbanco da uol
+- Nesse portal, o cliente deverá observar faturas vencidas, pagas e a vencer APENAS DELE MESMO
+- Ele também poderá observar os pedidos que ele fez, preferencialmente com nome e imagem dos itens comprados
+- Também pode conseguir observar os dados de seu vendedor responsável
+- Deve ser seguro
+  - Login protegido contra tentativas repetidas e token de cliente separado.
+  - Todas as consultas do portal usam o `CODCLI` do token, nunca um código
+    informado pela requisição.
+
+## [ ] (menos urgente) Rotas para cadastro de funcionários, vendedores e clientes
+
+obs: não temos permissão de edição nos bancos do WinThor, apenas visualização

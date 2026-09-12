@@ -76,6 +76,5 @@ class UolVendedores(base):
 
     CODUSUR = Column(Integer, primary_key=True)
     NOME = Column(String(150))
-    CODSUPERVISOR = Column(Integer, nullable=True)
     FOTO = Column(String(200), nullable=True) #caminho da foto do vendedor
     TELEFONE = Column(String(20), nullable=True) #telefone do vendedor

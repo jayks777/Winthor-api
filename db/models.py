@@ -109,7 +109,6 @@ class ItensPedido(Base):
     CODPRODUT = Column(Integer)
     CODCLI = Column(Integer)
     CODUSUR = Column(Integer)
-    QT = Column(Integer)
 
 class Supervisores(Base):
     __tablename__ = 'PCSUPERV'

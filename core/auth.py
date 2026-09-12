@@ -81,9 +81,17 @@ def get_current_client(
             detail="Invalid token",
         )
 
+    try:
+        client_id = int(client_id)
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token",
+        )
+
     client = (
         db.query(UolClientes)
-        .filter(UolClientes.ID == int(client_id))
+        .filter(UolClientes.ID == client_id)
         .first()
     )
 
