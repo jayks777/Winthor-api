@@ -69,6 +69,7 @@ class UolClientes(base):
     SENHA = Column(String(255), nullable=False)
     NOME = Column(String(100), nullable=False)
     PERMISSAO = Column(Boolean, nullable=False, default=False)
+    CODUSUR = Column(Integer, nullable=True) #Vendedor responsável pelo cliente
     
 class UolVendedores(base):
     __tablename__ = "vendedores"

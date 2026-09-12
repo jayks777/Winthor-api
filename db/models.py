@@ -66,6 +66,7 @@ class Prestacoes(Base):
     CODFILIAL = Column(Integer)
     CODUSUR = Column(Integer) #Código do vendedor
     CODBARRA = Column(String(44))  # Código de barras da duplicata
+    NUMPED = Column(Integer)  # Número do pedido associado à duplicata
 
 class Vendedores(Base):
     __tablename__ = 'PCUSUARI'
@@ -105,19 +106,13 @@ class ItensPedido(Base):
     VLOUTRASDESP = Column(Numeric(15, 2))
     VLFRETE = Column(Numeric(15, 2))
     BONIFIC = Column(String(1))
+    CODPRODUT = Column(Integer)
+    CODCLI = Column(Integer)
+    CODUSUR = Column(Integer)
+    QT = Column(Integer)
 
 class Supervisores(Base):
     __tablename__ = 'PCSUPERV'
     
     CODSUPERVISOR = Column(Integer, primary_key=True)
     NOME = Column(String(150))
-
-'''class UolUser(base):
-    __tablename__ = "usuarios"
-
-    id = Column(Integer, primary_key=True)
-    usuario = Column(String(100))
-    senha = Column(String(72))  
-    role = Column(String(50))
-    codusur = Column(Integer)
-    codsupervisor = Column(Integer)'''
