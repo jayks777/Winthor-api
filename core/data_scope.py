@@ -10,7 +10,7 @@ def apply_vendedor_scope(
 ):
     role = current_user.role.lower()
 
-    if role in "admin":
+    if role == "admin":
         return stmt
 
     if role == "manager":

@@ -64,11 +64,11 @@ class UolClientes(base):
     __tablename__ = "clientes"
 
     ID = Column(Integer, primary_key=True)
-    CODCLI = Column(Integer)
-    NUMDOC = Column(String(14)) #numero do CNPJ ou CPF
-    SENHA = Column(String(20)) #senha do cliente
-    NOME = Column(String(100)) #nome do cliente
-    PERMISSAO = Column(Boolean) #permissão de acesso ao portal
+    CODCLI = Column(Integer, nullable=False, unique=True)
+    NUMDOC = Column(String(14), nullable=False, unique=True)
+    SENHA = Column(String(255), nullable=False)
+    NOME = Column(String(100), nullable=False)
+    PERMISSAO = Column(Boolean, nullable=False, default=False)
     
 class UolVendedores(base):
     __tablename__ = "vendedores"

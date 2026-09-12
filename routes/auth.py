@@ -99,3 +99,11 @@ def logout(response: Response):
 @router.get("/me", response_model=UserResponse)
 def read_users_me(current_user: UserResponse = Depends(get_current_user)):
     return current_user
+
+@router.post("/client-login")
+def client_login():
+    pass
+
+@router.get("/client-me", response_model=UserResponse)
+def read_client_me(current_user: UserResponse = Depends(get_current_user)):
+    return current_user
