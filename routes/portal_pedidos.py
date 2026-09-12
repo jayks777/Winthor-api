@@ -25,6 +25,8 @@ def _imagem_produto(codprod: int | None) -> str | None:
 
 
 def _serialize_pedido(pedido: Pedidos, itens: list[dict]) -> dict:
+    # Não expomos total: a semântica de frete, outras despesas e bonificação
+    # precisa ser validada no WinThor antes de consolidar valores por pedido.
     return {
         "numero": pedido.NUMPED,
         "data": pedido.DATA,
@@ -35,7 +37,11 @@ def _serialize_pedido(pedido: Pedidos, itens: list[dict]) -> dict:
     }
 
 
-def _itens_por_pedido(db: Session, numeros_pedido: list[int]) -> dict[int, list[dict]]:
+def _itens_por_pedido(
+    db: Session,
+    numeros_pedido: list[int],
+    codcli: int,
+) -> dict[int, list[dict]]:
     if not numeros_pedido:
         return {}
 
@@ -54,7 +60,10 @@ def _itens_por_pedido(db: Session, numeros_pedido: list[int]) -> dict[int, list[
             Produtos.UNIDADE.label("unidade"),
         )
         .outerjoin(Produtos, Produtos.CODPROD == ItensPedido.CODPROD)
-        .filter(ItensPedido.NUMPED.in_(numeros_pedido))
+        .filter(
+            ItensPedido.NUMPED.in_(numeros_pedido),
+            ItensPedido.CODCLI == codcli,
+        )
         .order_by(ItensPedido.NUMPED.desc(), ItensPedido.NUMSEQ)
         .all()
     )
@@ -94,7 +103,11 @@ def client_pedidos(
         .all()
     )
 
-    itens = _itens_por_pedido(db, [pedido.NUMPED for pedido in pedidos])
+    itens = _itens_por_pedido(
+        db,
+        [pedido.NUMPED for pedido in pedidos],
+        current_client.CODCLI,
+    )
     return [
         _serialize_pedido(pedido, itens.get(pedido.NUMPED, []))
         for pedido in pedidos
@@ -120,5 +133,5 @@ def client_pedido(
         # Não revela se o número pertence a outro cliente.
         raise HTTPException(status_code=404, detail="Pedido não encontrado.")
 
-    itens = _itens_por_pedido(db, [pedido.NUMPED])
+    itens = _itens_por_pedido(db, [pedido.NUMPED], current_client.CODCLI)
     return _serialize_pedido(pedido, itens.get(pedido.NUMPED, []))

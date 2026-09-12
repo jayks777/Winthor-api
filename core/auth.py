@@ -67,7 +67,7 @@ def get_current_client(
                 detail="Invalid client token",
             )
 
-        client_id = payload.get("sub")
+        client_id = payload.get("client_id")
 
         if not client_id:
             raise HTTPException(
@@ -91,7 +91,7 @@ def get_current_client(
 
     client = (
         db.query(UolClientes)
-        .filter(UolClientes.ID == client_id)
+        .filter(UolClientes.CODCLI == client_id)
         .first()
     )
 

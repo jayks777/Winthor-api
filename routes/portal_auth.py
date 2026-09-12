@@ -137,7 +137,7 @@ async def client_login(
 
     access_token = create_access_token(
         data={
-            "sub": str(client.ID),
+            "client_id": str(client.CODCLI),
             "type": "client",
         }
     )
